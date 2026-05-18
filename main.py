@@ -262,6 +262,13 @@ class PersonalAccountantApp:
         self.summary_expense_label.config(text=f"Расходы: {total_expense:.2f} руб.")
         self.summary_balance_label.config(text=f"Баланс: {balance:.2f} руб.")
 
+        # Проверка бюджета (каждые 5 вызовов)
+        if not hasattr(self, '_budget_check_count'):
+            self._budget_check_count = 0
+        self._budget_check_count += 1
+        if self._budget_check_count >= 5:
+            self._show_category_status()
+
         # Цветовая индикация баланса
         if balance >= 0:
             self.summary_balance_label.config(foreground="green")
@@ -391,7 +398,38 @@ class PersonalAccountantApp:
         self._update_summary()
         self._clear_form()
 
+    def _show_category_status(self) -> None:
+        """
+        Показывает статус расходов по категориям.
+        Демонстрирует полиморфизм.
+        """
+        from models import ExpenseCategory
 
+        expenses = self.manager.get_expenses_by_category()
+        
+        # Отладка — покажем, что вообще происходит
+        print(f"[DEBUG] Расходы по категориям: {expenses}")
+        
+        if not expenses:
+            messagebox.showinfo(
+                "Статус расходов",
+                "Нет данных о расходах.\nДобавьте хотя бы одну запись с типом «Расход»."
+            )
+            return
+
+        status_lines = []
+        for category_name, total in expenses:
+            cat = ExpenseCategory(category_name)
+            status = cat.get_status(total)
+            status_lines.append(
+                f"• {category_name}: {total:.2f} руб. — {status}"
+            )
+
+        messagebox.showinfo(
+            "Статус расходов",
+            "Текущий статус по категориям:\n\n" + "\n".join(status_lines)
+        )
+  
 def main():
     """Точка входа в приложение."""
     root = tk.Tk()

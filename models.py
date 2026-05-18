@@ -9,6 +9,7 @@
 import sqlite3
 from datetime import date
 from typing import List, Tuple, Optional
+from abc import ABC, abstractmethod
 
 
 class Transaction:
@@ -299,3 +300,79 @@ if __name__ == "__main__":
     all_records = manager.get_all_transactions()
     print("Все записи:", all_records)
     print(f"Баланс: {manager.get_balance():.2f} руб.")
+
+
+
+
+class Category(ABC):
+    """
+    Абстрактный базовый класс для категорий.
+    Демонстрирует принцип абстракции и полиморфизма.
+    """
+
+    @abstractmethod
+    def get_type(self) -> str:
+        """Возвращает тип категории: 'income' или 'expense'."""
+        pass
+
+    @abstractmethod
+    def get_status(self, amount: float) -> str:
+        """Возвращает статус категории на основе суммы."""
+        pass
+
+    @abstractmethod
+    def get_name(self) -> str:
+        """Возвращает название категории."""
+        pass
+
+
+class ExpenseCategory(Category):
+    """
+    Категория расходов. Наследуется от Category.
+    Демонстрирует принцип наследования.
+    """
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def get_type(self) -> str:
+        return "expense"
+
+    def get_status(self, amount: float) -> str:
+        if amount == 0:
+            return "Нет трат"
+        elif amount < 5000:
+            return "Экономия"
+        elif amount < 20000:
+            return "Норма"
+        else:
+            return "Много"
+
+    def get_name(self) -> str:
+        return self.name
+
+
+class IncomeCategory(Category):
+    """
+    Категория доходов. Наследуется от Category.
+    Демонстрирует принцип наследования.
+    """
+
+    def __init__(self, name: str):
+        self.name = name
+
+    def get_type(self) -> str:
+        return "income"
+
+    def get_status(self, amount: float) -> str:
+        if amount == 0:
+            return "Нет доходов"
+        elif amount < 30000:
+            return "Низкий"
+        elif amount < 80000:
+            return "Средний"
+        else:
+            return "Высокий"
+
+    def get_name(self) -> str:
+        return self.name
