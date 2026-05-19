@@ -26,7 +26,7 @@ class PersonalAccountantApp:
         self.root.title("ЗаяцСчетовод")
         self.root.geometry("1400x850")
         self.root.minsize(1100, 700)
-        self.root.configure(bg="#0a0a0f")
+        self.root.configure(bg="#0a0a0f")  # Основной фон приложения
 
         # Инициализация менеджера финансов и визуализатора
         self.manager = FinanceManager()
@@ -44,6 +44,9 @@ class PersonalAccountantApp:
         self._animation_phase = 0
         self._glow_alpha = 0
         self._glow_direction = 1
+        
+        # Единый отступ от краев для всех блоков
+        self.uniform_padding = 25
 
         self._create_styles()
         self._create_widgets()
@@ -56,82 +59,97 @@ class PersonalAccountantApp:
         style = ttk.Style()
         style.theme_use("clam")
 
-        # Цветовая палитра (только HEX без альфа-канала)
-        # Базовый зеленый: rgb(24, 99, 5) = #186305
-        base_green = "#0D3F00"
-        light_green = "#166700"  # rgb(24, 99, 5) осветленный
-        dark_green = "#072100"   # rgb(24, 99, 5) затемненный
-        
+        # ===== ЦВЕТОВАЯ ПАЛИТРА =====
         self.colors = {
-            'bg_dark': '#0a0a0f',
-            'bg_primary': "#002204",
-            'bg_secondary': '#1a1a24',
-            'bg_card': "#104902",        # Зеленый фон для карточек
-            'bg_card_light': "#0d5a00",  # Чуть светлее зеленый
-            'bg_hover': "#032500",
+            # Основные фоны
+            'bg_dark': '#0a0a0f',           # Самый темный фон приложения
+            'bg_primary': "#002204",        # Фон шапки (очень темно-зеленый)
+            'bg_secondary': '#1a1a24',      # Вторичный фон (не используется активно)
+            'bg_card': "#104902",           # Фон карточек и формы (темно-зеленый)
+            'bg_card_light': "#0d5a00",     # Светлая полоска в карточках (светло-зеленый)
+            'bg_hover': "#032500",          # Фон при наведении (темно-зеленый)
             
-            'bg_input': '#1a1a28',
-            'accent_green': '#00e676',
-            'accent_green_dark': "#00c853",
-            'accent_red': '#ff5252',
-            'accent_red_dark': '#ff1744',
-            'accent_blue': '#448aff',
-            'accent_blue_dark': '#2979ff',
-            'accent_purple': '#b388ff',
-            'accent_purple_dark': '#7c4dff',
-            'accent_orange': '#ff9100',
-            'accent_orange_dark': '#ff6d00',
-            'text_primary': '#f5f5f7',
-            'text_secondary': '#c8e6c9',  # Светло-зеленый для текста
-            'text_muted': '#a5d6a7',      # Приглушенный зеленый
-            'border': '#2a5a15',
-            'border_light': '#3a7a25',
-            'income_bg': '#0a3d0a',       # Тёмно-зелёный для доходов
-            'expense_bg': '#3d1a1a',      # Тёмно-красный для расходов
+            # Поля ввода
+            'bg_input': '#1a1a28',          # Фон полей ввода (темно-синий)
+            'bg_input_text': '#e0e0e0',     # Цвет текста в полях ввода (светло-серый)
+            'bg_category_text': '#1a1a28',  # Цвет текста в выпадающем списке категорий (темный, как фон)
+            
+            # Акцентные цвета
+            'accent_green': '#00e676',      # Зеленый акцент (доходы, кнопка Добавить)
+            'accent_green_dark': "#00c853", # Темно-зеленый акцент
+            'accent_red': '#ff5252',        # Красный акцент (расходы, кнопка Удалить)
+            'accent_red_dark': '#ff1744',   # Темно-красный акцент
+            'accent_blue': '#448aff',       # Синий акцент (кнопка Сохранить)
+            'accent_blue_dark': '#2979ff',  # Темно-синий акцент
+            'accent_purple': '#b388ff',     # Фиолетовый акцент (графики)
+            'accent_purple_dark': '#7c4dff',# Темно-фиолетовый акцент
+            'accent_orange': '#ff9100',     # Оранжевый акцент (баланс, кнопка Отменить)
+            'accent_orange_dark': '#ff6d00',# Темно-оранжевый акцент
+            
+            # Текст
+            'text_primary': '#f5f5f7',      # Основной текст (почти белый)
+            'text_secondary': '#c8e6c9',    # Вторичный текст на зеленом фоне (светло-зеленый)
+            'text_muted': '#a5d6a7',        # Приглушенный текст на зеленом фоне
+            
+            # Границы
+            'border': '#2a5a15',            # Цвет границ полей ввода (зеленый)
+            'border_light': '#3a7a25',      # Светлая граница (светло-зеленый)
+            
+            # Фоны для тегов таблицы
+            'income_bg': '#0a3d0a',         # Фон строки с доходом (темно-зеленый)
+            'expense_bg': '#3d1a1a',        # Фон строки с расходом (темно-красный)
+            
+            # Цвета кнопок действий (3 основных цвета)
+            'btn_primary': '#00c853',       # Основной зеленый (Добавить, Сохранить)
+            'btn_secondary': '#ff6d00',     # Оранжевый (Отменить, Обновить)
+            'btn_danger': '#ff1744',        # Красный (Удалить)
+            'btn_info': '#7c4dff',          # Фиолетовый (Графики)
         }
 
-        # Настройка стилей ttk
+        # Настройка стилей ttk для таблицы
         style.configure("Treeview", 
-                       background=self.colors['bg_card'],
-                       fieldbackground=self.colors['bg_card'],
-                       foreground=self.colors['text_primary'],
+                       background=self.colors['bg_card'],      # Фон таблицы
+                       fieldbackground=self.colors['bg_card'], # Фон ячеек таблицы
+                       foreground=self.colors['text_primary'], # Цвет текста в таблице
                        rowheight=35,
                        font=("Segoe UI", 10),
                        borderwidth=0)
         
         style.configure("Treeview.Heading",
-                       background='#124a03',
-                       foreground=self.colors['text_secondary'],
+                       background='#124a03',                   # Фон заголовков таблицы (темно-зеленый)
+                       foreground=self.colors['text_secondary'],# Цвет текста заголовков
                        font=("Segoe UI", 10, "bold"),
                        padding=(10, 8),
                        borderwidth=0)
         
         style.map("Treeview.Heading",
-                 background=[("active", '#1a6b08')],
+                 background=[("active", '#1a6b08')],           # Фон заголовка при наведении
                  foreground=[("active", self.colors['text_primary'])])
 
+        # Стиль для скроллбара
         style.configure("Vertical.TScrollbar",
-                       background=self.colors['bg_input'],
-                       troughcolor=self.colors['bg_dark'],
-                       arrowcolor=self.colors['text_secondary'],
+                       background=self.colors['bg_input'],     # Фон скроллбара
+                       troughcolor=self.colors['bg_dark'],     # Фон полосы прокрутки
+                       arrowcolor=self.colors['text_secondary'],# Цвет стрелок
                        borderwidth=0,
                        arrowsize=14)
 
-        style.configure("TCombobox",
-                       font=("Segoe UI", 10),
-                       fieldbackground=self.colors['bg_input'],
-                       foreground=self.colors['text_primary'],
-                       background=self.colors['bg_input'],
-                       arrowcolor=self.colors['text_secondary'],
-                       borderwidth=1)
+        # Стиль для Combobox с темно-синим фоном и темным текстом
+        style.configure("Dark.TCombobox",
+                       fieldbackground=self.colors['bg_input'],      # Фон поля (темно-синий)
+                       background=self.colors['bg_input'],           # Фон выпадающего списка
+                       foreground=self.colors['bg_input_text'],      # Цвет текста в поле (светло-серый)
+                       arrowcolor=self.colors['text_secondary'],     # Цвет стрелки
+                       selectbackground=self.colors['accent_green'], # Фон выделенного элемента
+                       selectforeground='#000000')                   # Цвет текста выделенного элемента (черный)
 
     def _draw_bunny(self, canvas, x, y, size):
         """Рисует зайца на canvas."""
-        # Константы для рисования
-        OUTLINE_COLOR = '#1a1a1a'
-        EYE_COLOR = '#ffffff'
-        PUPIL_COLOR = '#1a1a1a'
-        MOUTH_COLOR = '#1a1a1a'
+        # Константы для рисования зайца
+        OUTLINE_COLOR = '#1a1a1a'  # Цвет контура (темно-серый)
+        EYE_COLOR = '#ffffff'      # Цвет глаз (белый)
+        PUPIL_COLOR = '#1a1a1a'    # Цвет зрачков (темно-серый)
+        MOUTH_COLOR = '#1a1a1a'    # Цвет рта (темно-серый)
         
         outline_width = max(1, size // 20)
         head_size = size
@@ -142,7 +160,7 @@ class PersonalAccountantApp:
         ear_y = y - ear_height // 1.5
         
         # Основной цвет зайца
-        body_color = '#e0e0e0'
+        body_color = '#e0e0e0'  # Светло-серый цвет тела зайца
         
         # Левое ухо
         left_ear_x = x - head_size // 4
@@ -201,156 +219,158 @@ class PersonalAccountantApp:
 
     def _create_widgets(self) -> None:
         """Создаёт интерфейс в современном стиле."""
+        p = self.uniform_padding  # Единый отступ для всех блоков
         
         # === Шапка с логотипом (увеличенная) ===
-        header = tk.Frame(self.root, height=90, bg=self.colors['bg_primary'])
+        header = tk.Frame(self.root, height=90, bg=self.colors['bg_primary'])  # Фон шапки
         header.pack(fill=tk.X)
         header.pack_propagate(False)
         
         # Логотип с зайцем
-        logo_frame = tk.Frame(header, bg=self.colors['bg_primary'])
-        logo_frame.pack(side=tk.LEFT, padx=30, pady=10)
+        logo_frame = tk.Frame(header, bg=self.colors['bg_primary'])  # Фон логотипа
+        logo_frame.pack(side=tk.LEFT, padx=p+5, pady=10)  # Используем единый отступ +5 для логотипа
         
         # Canvas для зайца
         bunny_canvas = tk.Canvas(logo_frame, width=70, height=70, 
-                                bg=self.colors['bg_primary'], highlightthickness=0)
+                                bg=self.colors['bg_primary'], highlightthickness=0)  # Фон canvas
         bunny_canvas.pack(side=tk.LEFT)
         
         # Рисуем зайца
         self._draw_bunny(bunny_canvas, 35, 42, 50)
         
         # Название приложения
-        title_frame = tk.Frame(logo_frame, bg=self.colors['bg_primary'])
+        title_frame = tk.Frame(logo_frame, bg=self.colors['bg_primary'])  # Фон заголовка
         title_frame.pack(side=tk.LEFT, padx=15)
         
+        # Основной заголовок
         tk.Label(title_frame, text="ЗаяцСчетовод", 
                 font=("Segoe UI", 24, "bold"), 
-                bg=self.colors['bg_primary'], 
-                fg=self.colors['text_primary']).pack()
+                bg=self.colors['bg_primary'],        # Фон заголовка
+                fg=self.colors['text_primary']).pack()  # Цвет текста (почти белый)
         
+        # Подзаголовок
         tk.Label(title_frame, text="Персональный финансовый помощник", 
                 font=("Segoe UI", 9), 
-                bg=self.colors['bg_primary'], 
-                fg=self.colors['text_secondary']).pack()
+                bg=self.colors['bg_primary'],        # Фон подзаголовка
+                fg=self.colors['text_secondary']).pack()  # Цвет текста (светло-зеленый)
         
         # Дата и статус
-        status_frame = tk.Frame(header, bg=self.colors['bg_primary'])
-        status_frame.pack(side=tk.RIGHT, padx=30)
+        status_frame = tk.Frame(header, bg=self.colors['bg_primary'])  # Фон статуса
+        status_frame.pack(side=tk.RIGHT, padx=p+5)  # Используем единый отступ +5
         
         today = date.today()
         months = ['Января', 'Февраля', 'Марта', 'Апреля', 'Мая', 'Июня',
                  'Июля', 'Августа', 'Сентября', 'Октября', 'Ноября', 'Декабря']
         date_str = f"{today.day} {months[today.month - 1]} {today.year}"
         
+        # Статус "Онлайн"
         tk.Label(status_frame, text="🟢 Онлайн", 
                 font=("Segoe UI", 9), 
-                bg=self.colors['bg_primary'], 
-                fg=self.colors['accent_green']).pack(anchor=tk.E, pady=(15, 0))
+                bg=self.colors['bg_primary'],        # Фон статуса
+                fg=self.colors['accent_green']).pack(anchor=tk.E, pady=(15, 0))  # Зеленый текст
         
+        # Дата
         tk.Label(status_frame, text=date_str, 
                 font=("Segoe UI", 11), 
-                bg=self.colors['bg_primary'], 
-                fg=self.colors['text_secondary']).pack(anchor=tk.E)
+                bg=self.colors['bg_primary'],        # Фон даты
+                fg=self.colors['text_secondary']).pack(anchor=tk.E)  # Светло-зеленый текст
 
         # === Карточки со сводкой (с зеленым фоном) ===
-        cards_container = tk.Frame(self.root, bg=self.colors['bg_dark'])
-        cards_container.pack(fill=tk.X, padx=25, pady=(20, 15))
+        cards_container = tk.Frame(self.root, bg=self.colors['bg_dark'])  # Фон контейнера
+        cards_container.pack(fill=tk.X, padx=p, pady=(20, 15))  # Единый отступ p
 
-        # Только 3 карточки: Доходы, Расходы, Баланс (увеличенный)
+        # Новый порядок: Баланс (большой), Доходы, Расходы
         cards_data = [
-            ("💰 Доходы", self.colors['accent_green'], "summary_income_label", 1),
-            ("📉 Расходы", self.colors['accent_red'], "summary_expense_label", 1),
-            ("📊 Баланс", self.colors['accent_orange'], "summary_balance_label", 2),  # Баланс в 2 раза шире
+            ("📊 Баланс", self.colors['accent_orange'], "summary_balance_label", 2),  # Оранжевый акцент
+            ("📈 Доходы", self.colors['accent_green'], "summary_income_label", 1),    # Зеленый акцент
+            ("📉 Расходы", self.colors['accent_red'], "summary_expense_label", 1),    # Красный акцент
         ]
 
         for i, (title, color, attr_name, width_multiplier) in enumerate(cards_data):
             # Карточка с зеленым фоном
-            card = tk.Frame(cards_container, bg=self.colors['bg_card'], 
+            card = tk.Frame(cards_container, bg=self.colors['bg_card'],  # Фон карточки (темно-зеленый)
                           relief=tk.FLAT, bd=0, padx=20, pady=20)
-            # Баланс занимает в 2 раза больше места
+            # Все карточки одинаковой ширины
+            card.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=8)
+            
+            # Увеличиваем отступы для карточки баланса
             if width_multiplier == 2:
-                card.pack(side=tk.LEFT, expand=True, fill=tk.BOTH, padx=8)
-                # Делаем баланс выше
                 card.configure(padx=25, pady=25)
-            else:
-                card.pack(side=tk.LEFT, fill=tk.BOTH, padx=8, ipadx=10)
             
             # Более светлая полоска сверху
-            tk.Frame(card, bg=self.colors['bg_card_light'], height=3).pack(fill=tk.X, pady=(0, 15))
+            tk.Frame(card, bg=self.colors['bg_card_light'], height=3).pack(fill=tk.X, pady=(0, 15))  # Светло-зеленая полоска
             
-            # Заголовок
+            # Заголовок карточки
             tk.Label(card, text=title, 
                     font=("Segoe UI", 12 if width_multiplier == 2 else 11), 
-                    bg=self.colors['bg_card'], 
-                    fg=self.colors['text_secondary']).pack(anchor=tk.W)
+                    bg=self.colors['bg_card'],          # Фон заголовка
+                    fg=self.colors['text_secondary']).pack(anchor=tk.W)  # Светло-зеленый текст
             
-            # Значение
+            # Значение в карточке
             font_size = 28 if width_multiplier == 2 else 24
             setattr(self, attr_name, 
                    tk.Label(card, text="0 ₽", 
                            font=("Segoe UI", font_size, "bold"), 
-                           bg=self.colors['bg_card'], 
-                           fg=color))
+                           bg=self.colors['bg_card'],  # Фон значения
+                           fg=color))                   # Цвет значения (акцентный)
             getattr(self, attr_name).pack(anchor=tk.W, pady=(10, 0))
 
         # === Форма добавления записи (с зеленым фоном) ===
-        form_container = tk.Frame(self.root, bg=self.colors['bg_card'], 
+        form_container = tk.Frame(self.root, bg=self.colors['bg_card'],  # Фон формы (темно-зеленый)
                                  relief=tk.FLAT, bd=0)
-        form_container.pack(fill=tk.X, padx=25, pady=(0, 15))
+        form_container.pack(fill=tk.X, padx=p, pady=(0, 15))  # Единый отступ p
         
-        inner_form = tk.Frame(form_container, bg=self.colors['bg_card'])
-        inner_form.pack(fill=tk.BOTH, padx=25, pady=20)
+        inner_form = tk.Frame(form_container, bg=self.colors['bg_card'])  # Фон внутренней формы
+        inner_form.pack(fill=tk.BOTH, padx=p, pady=20)  # Единый отступ p
 
         # Тип операции
-        type_frame = tk.Frame(inner_form, bg=self.colors['bg_card'])
+        type_frame = tk.Frame(inner_form, bg=self.colors['bg_card'])  # Фон переключателей
         type_frame.pack(fill=tk.X, pady=(0, 15))
         
         btn_style = {"font": ("Segoe UI", 10, "bold"), "relief": tk.FLAT, 
                     "bd": 0, "padx": 25, "pady": 8, "cursor": "hand2"}
         
+        # Кнопка "Расход" (красная)
         self.expense_btn = tk.Button(type_frame, text="🔴 Расход", 
                                      command=lambda: self._set_type("expense"),
                                      bg=self.colors['accent_red'], fg="white", **btn_style)
         self.expense_btn.pack(side=tk.LEFT, padx=(0, 10))
         
+        # Кнопка "Доход" (темно-синяя)
         self.income_btn = tk.Button(type_frame, text="🟢 Доход", 
                                      command=lambda: self._set_type("income"),
-                                     bg=self.colors['bg_input'], 
-                                     fg=self.colors['text_secondary'], **btn_style)
+                                     bg=self.colors['bg_input'],           # Темно-синий фон
+                                     fg=self.colors['text_secondary'], **btn_style)  # Светло-зеленый текст
         self.income_btn.pack(side=tk.LEFT)
 
         # Поля ввода
-        fields_row = tk.Frame(inner_form, bg=self.colors['bg_card'])
+        fields_row = tk.Frame(inner_form, bg=self.colors['bg_card'])  # Фон строки полей
         fields_row.pack(fill=tk.X, pady=(0, 15))
         
         # Стиль для меток на зеленом фоне
-        label_style = {"font": ("Segoe UI", 9), "bg": self.colors['bg_card'], 
-                      "fg": self.colors['text_secondary']}
+        label_style = {"font": ("Segoe UI", 9), "bg": self.colors['bg_card'],  # Фон меток
+                      "fg": self.colors['text_secondary']}                      # Цвет текста меток
         
-        # Категория с темным фоном
+        # Категория с темно-синим фоном и темным текстом
         cat_frame = tk.Frame(fields_row, bg=self.colors['bg_card'])
         cat_frame.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(0, 8))
         tk.Label(cat_frame, text="Категория", **label_style).pack(anchor=tk.W, pady=(0, 5))
-        # Создаем кастомный combobox с темным фоном
+        # Используем стиль Dark.TCombobox для темно-синего фона и темного текста
         self.category_combo = ttk.Combobox(cat_frame, textvariable=self.category_var, 
-                                          state="readonly", font=("Segoe UI", 10))
+                                          state="readonly", font=("Segoe UI", 10),
+                                          style="Dark.TCombobox")
         self.category_combo.pack(fill=tk.X, ipady=3)
-        # Применяем темный фон через конфигурацию стиля
-        style = ttk.Style()
-        style.configure("Dark.TCombobox", 
-                       fieldbackground=self.colors['bg_input'],
-                       background=self.colors['bg_input'])
-        self.category_combo.configure(style="Dark.TCombobox")
         
         # Сумма
         amount_frame = tk.Frame(fields_row, bg=self.colors['bg_card'])
         amount_frame.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=8)
         tk.Label(amount_frame, text="Сумма (₽)", **label_style).pack(anchor=tk.W, pady=(0, 5))
         amount_entry = tk.Entry(amount_frame, textvariable=self.amount_var, font=("Segoe UI", 10),
-                               bg=self.colors['bg_input'], fg=self.colors['text_primary'],
+                               bg=self.colors['bg_input'],           # Темно-синий фон поля
+                               fg=self.colors['text_primary'],       # Почти белый текст
                                relief=tk.FLAT, insertbackground=self.colors['text_primary'],
                                highlightthickness=1, highlightbackground=self.colors['border'],
-                               highlightcolor=self.colors['accent_green'])
+                               highlightcolor=self.colors['accent_green'])  # Зеленая подсветка при фокусе
         amount_entry.pack(fill=tk.X, ipady=5)
         
         # Дата
@@ -369,24 +389,37 @@ class PersonalAccountantApp:
         desc_frame.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=(8, 0))
         tk.Label(desc_frame, text="Описание", **label_style).pack(anchor=tk.W, pady=(0, 5))
         desc_entry = tk.Entry(desc_frame, textvariable=self.description_var, font=("Segoe UI", 10),
-                             bg=self.colors['bg_input'], fg=self.colors['text_primary'],
+                             bg=self.colors['bg_input'],           # Темно-синий фон
+                             fg=self.colors['text_primary'],       # Почти белый текст
                              relief=tk.FLAT, insertbackground=self.colors['text_primary'],
                              highlightthickness=1, highlightbackground=self.colors['border'],
                              highlightcolor=self.colors['accent_green'])
         desc_entry.pack(fill=tk.X, ipady=5)
 
         # === Панель действий ===
-        actions_frame = tk.Frame(inner_form, bg=self.colors['bg_card'])
+        actions_frame = tk.Frame(inner_form, bg=self.colors['bg_card'])  # Фон панели действий
         actions_frame.pack(fill=tk.X)
         
+        # Конфигурация кнопок действий (используем 3 основных цвета)
+        # btn_primary (зеленый) - для основных действий
+        # btn_secondary (оранжевый) - для вспомогательных действий  
+        # btn_info (фиолетовый) - для информационных действий
+        # btn_danger (красный) - для опасных действий
         buttons_config = [
-            ("➕ Добавить", self._add_transaction, self.colors['accent_green'], self.colors['bg_dark']),
-            ("💾 Сохранить", self._save_edit, self.colors['accent_blue'], 'white'),
-            ("✖️ Отменить", self._cancel_edit, self.colors['accent_orange'], self.colors['bg_dark']),
-            ("🗑️ Удалить", self._delete_transaction, self.colors['accent_red'], 'white'),
-            ("📊 График расходов", self._show_expense_chart, self.colors['accent_purple'], 'white'),
-            ("📈 График доходов", self._show_income_chart, self.colors['accent_purple'], 'white'),
-            ("🔄 Обновить", self._refresh_all, '#607d8b', 'white')
+            # Основные действия - зеленые кнопки
+            ("➕ Добавить", self._add_transaction, self.colors['btn_primary'], self.colors['bg_dark']),
+            ("💾 Сохранить", self._save_edit, self.colors['btn_primary'], self.colors['bg_dark']),
+            
+            # Вспомогательные действия - оранжевые кнопки
+            ("✖️ Отменить", self._cancel_edit, self.colors['btn_secondary'], self.colors['bg_dark']),
+            ("🔄 Обновить", self._refresh_all, self.colors['btn_secondary'], self.colors['bg_dark']),
+            
+            # Опасные действия - красная кнопка
+            ("🗑️ Удалить", self._delete_transaction, self.colors['btn_danger'], 'white'),
+            
+            # Информационные действия - фиолетовые кнопки
+            ("📉 График расходов", self._show_expense_chart, self.colors['btn_info'], 'white'),
+            ("📈 График доходов", self._show_income_chart, self.colors['btn_info'], 'white'),
         ]
         
         btn_cfg = {"font": ("Segoe UI", 9, "bold"), "relief": tk.FLAT, "bd": 0, 
@@ -398,21 +431,22 @@ class PersonalAccountantApp:
             btn.pack(side=tk.LEFT, padx=3)
 
         # === Таблица транзакций (с зеленым фоном) ===
-        table_container = tk.Frame(self.root, bg=self.colors['bg_dark'])
-        table_container.pack(fill=tk.BOTH, expand=True, padx=25, pady=(0, 15))
+        table_container = tk.Frame(self.root, bg=self.colors['bg_dark'])  # Фон контейнера таблицы
+        table_container.pack(fill=tk.BOTH, expand=True, padx=p, pady=(0, 15))  # Единый отступ p
 
-        table_card = tk.Frame(table_container, bg=self.colors['bg_card'])
+        table_card = tk.Frame(table_container, bg=self.colors['bg_card'])  # Фон карточки таблицы
         table_card.pack(fill=tk.BOTH, expand=True)
         
         # Заголовок таблицы
         tk.Label(table_card, text="📋 История операций", 
                 font=("Segoe UI", 14, "bold"), 
-                bg=self.colors['bg_card'], 
-                fg=self.colors['text_primary']).pack(anchor=tk.W, padx=25, pady=(18, 12))
+                bg=self.colors['bg_card'],          # Фон заголовка таблицы
+                fg=self.colors['text_primary']).pack(anchor=tk.W, padx=p, pady=(18, 12))  # Единый отступ p
         
         columns = ("id", "type", "category", "amount", "date", "description")
         self.tree = ttk.Treeview(table_card, columns=columns, show="headings", height=12)
         
+        # Заголовки колонок таблицы
         self.tree.heading("id", text="ID")
         self.tree.heading("type", text="Тип")
         self.tree.heading("category", text="Категория")
@@ -420,6 +454,7 @@ class PersonalAccountantApp:
         self.tree.heading("date", text="Дата")
         self.tree.heading("description", text="Описание")
         
+        # Ширина колонок
         self.tree.column("id", width=60, stretch=False, anchor=tk.CENTER)
         self.tree.column("type", width=100, stretch=False, anchor=tk.CENTER)
         self.tree.column("category", width=130, stretch=False, anchor=tk.CENTER)
@@ -431,18 +466,18 @@ class PersonalAccountantApp:
                                  command=self.tree.yview, style="Vertical.TScrollbar")
         self.tree.configure(yscrollcommand=scrollbar.set)
         
-        tree_frame = tk.Frame(table_card, bg=self.colors['bg_card'])
-        tree_frame.pack(fill=tk.BOTH, expand=True, padx=25, pady=(0, 18))
+        tree_frame = tk.Frame(table_card, bg=self.colors['bg_card'])  # Фон рамки таблицы
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=p, pady=(0, 18))  # Единый отступ p
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.tree.bind("<Double-1>", self._on_row_double_click)
         
-        # Теги с правильными цветами
-        self.tree.tag_configure("income", background='#0a3d0a', 
-                               foreground=self.colors['text_primary'])
-        self.tree.tag_configure("expense", background='#3d1a1a', 
-                               foreground=self.colors['text_primary'])
+        # Теги для цветового оформления строк таблицы
+        self.tree.tag_configure("income", background='#0a3d0a',        # Темно-зеленый фон для доходов
+                               foreground=self.colors['text_primary'])  # Почти белый текст
+        self.tree.tag_configure("expense", background='#3d1a1a',       # Темно-красный фон для расходов
+                               foreground=self.colors['text_primary'])  # Почти белый текст
         
         self._on_type_change()
 
@@ -455,11 +490,11 @@ class PersonalAccountantApp:
         self.type_var.set(trans_type)
         
         if trans_type == "expense":
-            self.expense_btn.config(bg=self.colors['accent_red'], fg="white")
-            self.income_btn.config(bg=self.colors['bg_input'], fg=self.colors['text_secondary'])
+            self.expense_btn.config(bg=self.colors['accent_red'], fg="white")     # Красная кнопка расхода
+            self.income_btn.config(bg=self.colors['bg_input'], fg=self.colors['text_secondary'])  # Неактивная кнопка дохода
         else:
-            self.income_btn.config(bg=self.colors['accent_green'], fg=self.colors['bg_dark'])
-            self.expense_btn.config(bg=self.colors['bg_input'], fg=self.colors['text_secondary'])
+            self.income_btn.config(bg=self.colors['accent_green'], fg=self.colors['bg_dark'])    # Зеленая кнопка дохода
+            self.expense_btn.config(bg=self.colors['bg_input'], fg=self.colors['text_secondary'])  # Неактивная кнопка расхода
         
         self._on_type_change()
 
@@ -518,9 +553,9 @@ class PersonalAccountantApp:
         self.summary_balance_label.config(text=f"{balance:,.2f} ₽")
         
         if balance >= 0:
-            self.summary_balance_label.config(fg=self.colors['accent_orange'])
+            self.summary_balance_label.config(fg=self.colors['accent_orange'])  # Оранжевый для положительного баланса
         else:
-            self.summary_balance_label.config(fg=self.colors['accent_red'])
+            self.summary_balance_label.config(fg=self.colors['accent_red'])     # Красный для отрицательного баланса
         
         if not hasattr(self, '_budget_check_count'):
             self._budget_check_count = 0
